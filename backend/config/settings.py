@@ -41,9 +41,11 @@ INSTALLED_APPS = [
 
     'rest_framework',
 
-    # Revenue Shield AI apps — order matches the pipeline described in the
-    # problem statement: ingestion -> classification -> policy -> simulator
-    # -> audit -> backtest -> ops_console
+    
+
+
+   
+    
     'ingestion',
     'classification',
     'policy',
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
     'audit',
     'backtest',
     'ops_console',
+
 ]
 
 MIDDLEWARE = [
