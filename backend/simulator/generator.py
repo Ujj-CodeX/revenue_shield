@@ -69,7 +69,10 @@ class SyntheticDataset:
     def observable_events_as_dicts(self) -> list[dict]:
         """
         This is the ONLY view of the data the classification/policy layers
-        should ever consume — no ground-truth fields present.
+        should ever consume — no ground-truth fields present. `raw_text` is
+        included because a real gateway would surface it too when the
+        reason code itself is UNKNOWN_DECLINE; `true_reason_code` is
+        deliberately withheld here even though it lives on the event.
         """
         return [
             {
@@ -77,9 +80,14 @@ class SyntheticDataset:
                 "timestamp": e.timestamp.isoformat(),
                 "amount": e.amount,
                 "reason_code": e.reason_code.value,
+                "raw_text": e.raw_text,
             }
             for e in self.events
         ]
+
+    def event_true_labels(self) -> dict:
+        """Backtest-only: {(customer_id, timestamp) -> true_reason_code}."""
+        return {(e.customer_id, e.timestamp.isoformat()): e.true_reason_code.value for e in self.events}
 
     def ground_truth_lookup(self) -> dict:
         """Backtest-only: hidden state keyed by customer_id, for grading."""
