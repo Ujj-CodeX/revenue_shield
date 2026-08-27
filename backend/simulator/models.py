@@ -59,17 +59,12 @@ class SyntheticCustomer(models.Model):
 
 
 class ObservableEvent(models.Model):
-    """
-    The ONLY view of a failure that classification/policy are allowed to
-    query. No ground-truth fields on this model — enforced by design, not
-    just convention: adding a hidden field here should be treated as a bug.
-    """
-
     run = models.ForeignKey(SimulationRun, on_delete=models.CASCADE, related_name="events")
     customer_id = models.CharField(max_length=32)
     timestamp = models.DateField()
     amount = models.FloatField()
     reason_code = models.CharField(max_length=32)
+    raw_text = models.CharField(max_length=255, null=True, blank=True)  # only set when reason_code == UNKNOWN_DECLINE
 
     class Meta:
         indexes = [
@@ -77,5 +72,16 @@ class ObservableEvent(models.Model):
             models.Index(fields=["run", "customer_id"]),
         ]
 
+class EventGroundTruth(models.Model):
+    """
+    Backtest-only. True reason behind each ObservableEvent — deliberately
+    a separate table so classification/policy code has no query path that
+    could accidentally reach it. Only backtest/grading code should import
+    this model.
+    """
+    run = models.ForeignKey(SimulationRun, on_delete=models.CASCADE, related_name="event_truths")
+    event = models.OneToOneField(ObservableEvent, on_delete=models.CASCADE, related_name="ground_truth")
+    true_reason_code = models.CharField(max_length=32)
+
     def __str__(self):
-        return f"{self.customer_id} {self.timestamp} {self.reason_code}"
+        return f"{self.event_id} -> {self.true_reason_code}"    
