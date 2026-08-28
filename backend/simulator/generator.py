@@ -81,6 +81,7 @@ class SyntheticDataset:
                 "amount": e.amount,
                 "reason_code": e.reason_code.value,
                 "raw_text": e.raw_text,
+                "bank": e.bank,
             }
             for e in self.events
         ]
