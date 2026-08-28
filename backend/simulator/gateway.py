@@ -28,10 +28,10 @@ class PaymentOutcome:
     timestamp: date
     amount: float
     success: bool
-    reason_code: ReasonCode | None  # None when success. What downstream OBSERVES.
-    raw_text: str | None = None  # set only when reason_code == UNKNOWN_DECLINE
-    true_reason_code: ReasonCode | None = None  # HIDDEN — backtest grading only, never expose to classifier
-
+    reason_code: ReasonCode | None
+    bank: str = ""                          # NEW — observable, same as a real webhook's bank/gateway field
+    raw_text: str | None = None
+    true_reason_code: ReasonCode | None = None
 
 @dataclass
 class BankDegradationWindow:
