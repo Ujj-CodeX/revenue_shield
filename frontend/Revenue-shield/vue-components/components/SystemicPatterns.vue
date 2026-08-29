@@ -72,7 +72,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+// @ts-ignore - Vue runtime is provided by the app build tooling
+import { ref, computed } from 'vue'
 
 const props = defineProps<{
   patterns?: any

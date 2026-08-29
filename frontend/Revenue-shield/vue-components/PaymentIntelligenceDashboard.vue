@@ -47,7 +47,149 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+// @ts-ignore - Vue package/types are not available in this workspace yet.
+import { ref, reactive, Ref } from 'vue';
+
+// Type Interfaces
+interface KPIData {
+  recoveredRevenue: string;
+  recoveredTrend: string;
+  netRecoveryRate: string;
+  netRateTrend: string;
+  marginImprovement: string;
+  marginTrend: string;
+  retriesAvoided: string;
+  avoidedTrend: string;
+  criticalAlerts: number;
+}
+
+interface ClassificationBucket {
+  count: number;
+  pct: string;
+}
+
+interface ClassificationData {
+  hardDecline: ClassificationBucket;
+  softDecline: ClassificationBucket;
+  uncertain: ClassificationBucket;
+}
+
+interface GateBucket {
+  count: number;
+  pct: string;
+}
+
+interface GateData {
+  proceed: GateBucket;
+  skip: GateBucket;
+}
+
+interface RetryIntelligenceData {
+  scheduledRetries: number;
+  timingOptimized: string;
+}
+
+interface RecoveryOutcome {
+  amount: string;
+  pct: string;
+}
+
+interface AlertData {
+  title: string;
+  message: string;
+  target: string;
+}
+
+interface EngineData {
+  failedPayments: number;
+  classification: ClassificationData;
+  evGate: GateData;
+  retryIntelligence: RetryIntelligenceData;
+  outcomes: OutcomeSummary;
+  alert: AlertData;
+}
+
+interface RecommendationBase {
+  id: number;
+  type: string;
+  tagClass: string;
+  confidence: number;
+  confidenceClass: string;
+  title: string;
+  reason: string;
+  details: string;
+  approved: boolean;
+}
+
+interface Recommendation extends RecommendationBase {
+  expectedRecovery?: string;
+  risk?: string;
+}
+
+interface ReviewRecommendation extends RecommendationBase {
+  transactionsCount: number;
+}
+
+type RecommendationItem = Recommendation | ReviewRecommendation;
+
+interface OutcomeSummary {
+  recovered: RecoveryOutcome;
+  notRecovered: RecoveryOutcome;
+}
+
+interface HardDeclineReason {
+  code: string;
+  count: string;
+  pct: string;
+}
+
+interface HardDeclineData {
+  totalCount: string;
+  percentOfTotal: string;
+  expectedLoss: string;
+  reasons: HardDeclineReason[];
+  exportFilename: string;
+}
+
+interface BacktestStats {
+  policyRevenue: string;
+  policyRate: string;
+  naiveRevenue: string;
+  naiveRate: string;
+  avoidedRetries: string | number;
+  avoidedPct: string;
+  precision: string;
+  recall: string;
+  roi: string;
+}
+
+interface CopilotMessage {
+  sender: string;
+  text: string;
+}
+
+interface BankPattern {
+  name: string;
+  score: number;
+  scoreType: string;
+  trend: number[];
+  failureRate: string;
+  status: string;
+  statusClass: string;
+}
+
+interface SystemicPatternsData {
+  banks: BankPattern[];
+}
+
+interface AuditEvent {
+  time: string;
+  event: string;
+  details: string;
+  confidence: string;
+  outcome: string;
+  outcomeClass: string;
+}
 import Sidebar from './components/Sidebar.vue';
 import TopHeader from './components/TopHeader.vue';
 import KpiMetrics from './components/KpiMetrics.vue';
@@ -60,13 +202,13 @@ import SystemicPatterns from './components/SystemicPatterns.vue';
 import AuditTimeline from './components/AuditTimeline.vue';
 
 // Theme Reactive State
-const isLightMode = ref(false);
-const toggleTheme = () => {
+const isLightMode = ref<boolean>(false);
+const toggleTheme = (): void => {
   isLightMode.value = !isLightMode.value;
 };
 
 // KPI Data
-const kpiData = reactive({
+const kpiData = reactive<KPIData>({
   recoveredRevenue: '₹1,27,31,860',
   recoveredTrend: '+18.4%',
   netRecoveryRate: '32.7%',
@@ -79,7 +221,7 @@ const kpiData = reactive({
 });
 
 // AI Shield Engine Graph Data
-const engineData = reactive({
+const engineData = reactive<EngineData>({
   failedPayments: 45812,
   classification: {
     hardDecline: { count: 18765, pct: '40.9%' },
@@ -106,7 +248,7 @@ const engineData = reactive({
 });
 
 // Action Center Recommendations
-const recommendations = ref([
+const recommendations = ref<RecommendationItem[]>([
   {
     id: 1,
     type: 'RETRY RECOMMENDED',
@@ -147,12 +289,12 @@ const recommendations = ref([
   }
 ]);
 
-const handleApproveAction = (item: any) => {
+const handleApproveAction = (item: RecommendationItem): void => {
   item.approved = true;
 };
 
 // Hard Decline Intelligence
-const hardDeclineData = reactive({
+const hardDeclineData = reactive<HardDeclineData>({
   totalCount: '18,765',
   percentOfTotal: '40.9%',
   expectedLoss: '₹1,83,14,000',
@@ -166,12 +308,12 @@ const hardDeclineData = reactive({
   exportFilename: 'Netflix_Hard_Declines_12May2025.csv'
 });
 
-const handleExportCsv = () => {
+const handleExportCsv = (): void => {
   const csvContent = "data:text/csv;charset=utf-8," 
     + "Reason,Count,Percentage\n"
     + hardDeclineData.reasons.map(e => `${e.code},${e.count},${e.pct}`).join("\n");
   const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
+  const link: HTMLAnchorElement = document.createElement("a");
   link.setAttribute("href", encodedUri);
   link.setAttribute("download", hardDeclineData.exportFilename);
   document.body.appendChild(link);
@@ -180,7 +322,7 @@ const handleExportCsv = () => {
 };
 
 // Backtest Lab
-const backtestStats = reactive({
+const backtestStats = reactive<BacktestStats>({
   policyRevenue: '₹1,27,31,860',
   policyRate: '32.7%',
   naiveRevenue: '₹78,64,210',
@@ -192,13 +334,13 @@ const backtestStats = reactive({
   roi: '2.31x'
 });
 
-const handleRerunBacktest = () => {
+const handleRerunBacktest = (): void => {
   backtestStats.avoidedRetries = (12842 + Math.floor(Math.random() * 80)).toLocaleString();
   backtestStats.roi = (2.31 + (Math.random() * 0.08 - 0.04)).toFixed(2) + 'x';
 };
 
 // AI Copilot Messages
-const copilotMessages = ref([
+const copilotMessages = ref<CopilotMessage[]>([
   {
     sender: 'copilot',
     text: 'HDFC failures rose 18.7% between 08:00–10:00 IST due to gateway throttling. 142 soft failures are queued for auto-retry at 10:30 AM.'
@@ -206,7 +348,7 @@ const copilotMessages = ref([
 ]);
 
 // Systemic Patterns
-const systemicPatterns = reactive({
+const systemicPatterns = reactive<SystemicPatternsData>({
   banks: [
     { name: 'HDFC Bank', score: 28, scoreType: 'red', trend: [3, 5, 11, 8, 14], failureRate: '18.7%', status: 'Degrading', statusClass: 'status-degrading' },
     { name: 'ICICI Bank', score: 63, scoreType: 'amber', trend: [5, 8, 6, 12, 10], failureRate: '9.2%', status: 'Watch', statusClass: 'status-watch' },
@@ -217,7 +359,7 @@ const systemicPatterns = reactive({
 });
 
 // Audit Timeline
-const auditEvents = ref([
+const auditEvents = ref<AuditEvent[]>([
   { time: '10:31:12 AM', event: 'Classification', details: 'Soft Decline detected', confidence: '0.82', outcome: 'Soft Decline', outcomeClass: 'outcome-soft' },
   { time: '10:31:13 AM', event: 'EV Gate', details: 'EV ₹18,400 > 0', confidence: '0.79', outcome: 'Proceed', outcomeClass: 'outcome-proceed' },
   { time: '10:31:14 AM', event: 'Retry Scheduled', details: '06 May, 10:30 AM', confidence: '0.82', outcome: 'Scheduled', outcomeClass: 'outcome-scheduled' },
