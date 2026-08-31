@@ -1,0 +1,6 @@
+{
+  "name": "Revenue Shield AI",
+  "description": "Operational Intelligence Copilot for Recurring Payment Recovery - Terminal Operations Console",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
