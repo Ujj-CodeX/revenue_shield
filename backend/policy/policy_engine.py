@@ -45,10 +45,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-from ev_gate import DEFAULT_RETRY_COST, Bucket, EVDecision
-from ev_gate import evaluate as ev_evaluate
-from bank_pattern_detection import SystemicFlag, is_bank_flagged_on
-from retry_timing import RetryTimingDecision, suggest_retry_date
+from policy.ev_gate import DEFAULT_RETRY_COST, Bucket, EVDecision
+from policy.ev_gate import evaluate as ev_evaluate
+from policy.bank_pattern_detection import SystemicFlag, is_bank_flagged_on
+from policy.retry_timing import RetryTimingDecision, suggest_retry_date
 
 # Safety cap: a bank flagged for an unusually long stretch shouldn't be
 # able to push a retry forward indefinitely. If this cap is hit, the
@@ -217,7 +217,7 @@ def summarize(decisions: list[PolicyDecision]) -> dict:
 if __name__ == "__main__":
     from datetime import date as _date
 
-    from bank_pattern_detection import SystemicFlag as _SystemicFlag
+    from policy.bank_pattern_detection import SystemicFlag as _SystemicFlag
 
     # Fake Stage-1 outputs (mirrors classification.classifier.ClassificationResult
     # closely enough for this standalone demo — real callers pass the real object).

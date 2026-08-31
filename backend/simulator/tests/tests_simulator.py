@@ -35,11 +35,11 @@ def test_observable_events_never_leak_ground_truth_fields():
     ds = SyntheticDataset(seed=42, n_customers=30, months=2)
     forbidden_keys = {
         "salary_day", "salary_amount", "starting_balance", "daily_burn",
-        "card_valid_until", "mandate_revoked_on", "account_closed_on", "bank",
+        "card_valid_until", "mandate_revoked_on", "account_closed_on",
     }
     for event in ds.observable_events_as_dicts():
         assert forbidden_keys.isdisjoint(event.keys())
-        assert set(event.keys()) == {"customer_id", "timestamp", "amount", "reason_code"}
+        assert set(event.keys()) == {"customer_id", "timestamp", "amount", "reason_code", "raw_text", "bank"}
 
 
 def test_expired_card_always_hard_declines_even_with_healthy_balance():

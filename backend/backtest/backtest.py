@@ -41,10 +41,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-from bank_pattern_detection import detect_systemic_days
+from policy.bank_pattern_detection import detect_systemic_days
 from classification.classifier import classify_batch
-from ev_gate import DEFAULT_RETRY_COST
-from policy_engine import decide_batch
+from policy.ev_gate import DEFAULT_RETRY_COST
+from policy.policy_engine import decide_batch
 from simulator.gateway import BankDegradationWindow, MockGateway
 from simulator.generator import SyntheticDataset
 from simulator.ground_truth import CustomerGroundTruth
@@ -182,6 +182,39 @@ def print_report(report: BacktestReport) -> None:
     print("\nNotes:")
     for n in report.notes:
         print(f"  - {n}")
+
+
+def persist_backtest_run(report: "BacktestReport", n_customers: int = 200, months: int = 4):
+    """
+    Saves a BacktestReport to the DB (backtest.models.BacktestRun) and
+    writes the summary to the immutable audit log (audit.logger). Django
+    apps must be set up before this is called (management command / API
+    view context) — pure-Python callers should just use run_backtest().
+    """
+    from .models import BacktestRun
+
+    run = BacktestRun.objects.create(
+        seed=report.seed,
+        n_customers=n_customers,
+        months=months,
+        total_failures=report.total_failures,
+        hard_declines_skipped=report.hard_declines_skipped,
+        policy_attempts=report.policy.attempts,
+        policy_successes=report.policy.successes,
+        policy_rupees_recovered=report.policy.rupees_recovered,
+        policy_retry_cost_spent=report.policy.retry_cost_spent,
+        naive_attempts=report.naive.attempts,
+        naive_successes=report.naive.successes,
+        naive_rupees_recovered=report.naive.rupees_recovered,
+        naive_retry_cost_spent=report.naive.retry_cost_spent,
+        useless_retries_avoided_pct=report.useless_retries_avoided_pct,
+        notes=report.notes,
+    )
+
+    from audit.logger import log_backtest_run
+    log_backtest_run(report)
+
+    return run
 
 
 if __name__ == "__main__":

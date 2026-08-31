@@ -18,9 +18,9 @@ from datetime import date
 
 import pytest
 
-from bank_pattern_detection import SystemicFlag
-from ev_gate import Bucket
-from policy_engine import decide_batch, decide_event, summarize
+from policy.bank_pattern_detection import SystemicFlag
+from policy.ev_gate import Bucket
+from policy.policy_engine import decide_batch, decide_event, summarize
 
 
 @dataclass
@@ -129,7 +129,7 @@ def test_bank_not_flagged_on_suggested_date_no_adjustment():
 
 
 def test_bank_push_respects_max_cap():
-    from policy_engine import MAX_BANK_PUSH_DAYS
+    from policy.policy_engine import MAX_BANK_PUSH_DAYS
 
     c = FakeClassification("cust_8", "2026-03-10", 1499, "BANK_TIMEOUT", "SOFT")
     flags = [flag("ICICI", date(2026, 3, 11) + __import__("datetime").timedelta(days=i)) for i in range(50)]
@@ -163,7 +163,7 @@ def test_uncertain_high_confidence_can_still_get_a_retry():
 
 
 def test_uncertain_low_confidence_ev_too_small_skips():
-    c = FakeClassification("cust_12", "2026-03-10", 100, "UNKNOWN_DECLINE", "UNCERTAIN", confidence=0.3)
+    c = FakeClassification("cust_12", "2026-03-10", 15, "UNKNOWN_DECLINE", "UNCERTAIN", confidence=0.3)
     d = decide_event(c, bank="HDFC")
 
     assert d.ev_decision.should_retry is False
