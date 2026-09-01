@@ -28,12 +28,12 @@
           <div class="col-12 col-xl-8" id="left-main-column">
             <!-- Main Failed Payments Table -->
             <FailedPaymentsTable 
-              :payments="failedPayments" 
-              @view-all="handleViewAllPayments"
-            />
+  :payments="failedPayments" 
+  @view-all="handleViewAllPayments"
+/>
 
             <!-- Backtest Simulation Panel -->
-            <BacktestPanel :backtest="backtest" />
+            <BacktestPanel :backtest="backtest" @rerun="fetchDashboard" />
           </div>
 
           <!-- Right Column (Bucket Summary & Hard Decline Report) -->
@@ -59,14 +59,7 @@ import BucketSummary from '@/components/BucketSummary.vue';
 import HardDeclineReport from '@/components/HardDeclineReport.vue';
 import BacktestPanel from '@/components/BacktestPanel.vue';
 
-import {
-  merchantContext,
-  kpiMetrics,
-  failedPaymentsData,
-  bucketSummaryData,
-  hardDeclineReportData,
-  backtestData
-} from '@/data/mockData.js';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
 export default {
   name: 'MerchantDashboard',
@@ -81,20 +74,42 @@ export default {
   },
   data() {
     return {
-      merchant: { ...merchantContext },
-      kpiMetrics: { ...kpiMetrics },
-      failedPayments: [...failedPaymentsData],
-      bucketSummary: { ...bucketSummaryData },
-      hardDeclineReport: { ...hardDeclineReportData },
-      backtest: { ...backtestData },
-      isSidebarOpen: false
+      merchant: {},
+      kpiMetrics: {},
+      failedPayments: [],
+      bucketSummary: { hardDeclines: { count: '-', percentage: '-' }, softDeclines: { count: '-', percentage: '-' }, uncertain: { count: '-', percentage: '-' }, scheduledRetries: '-', resolvedRecovered: '-', resolvedNotRecovered: '-', skippedByEvGate: '-' },
+      hardDeclineReport: { topReasons: [] },
+      backtest: {},
+      isSidebarOpen: false,
+      loading: true,
+      error: null
     };
   },
+  mounted() {
+    this.fetchDashboard();
+  },
   methods: {
+    async fetchDashboard() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const res = await fetch(`${API_BASE}/api/dashboard/`);
+        if (!res.ok) throw new Error(`API returned ${res.status}`);
+        const data = await res.json();
+        this.merchant = data.merchantContext;
+        this.kpiMetrics = data.kpiMetrics;
+        this.failedPayments = data.failedPaymentsData;
+        this.bucketSummary = data.bucketSummaryData;
+        this.hardDeclineReport = data.hardDeclineReportData;
+        this.backtest = data.backtestData;
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.loading = false;
+      }
+    },
     handleRefresh() {
-      const now = new Date();
-      const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' };
-      this.merchant.dataAsOf = `${now.toLocaleDateString('en-GB', options)} IST`;
+      this.fetchDashboard();
     },
     handleDatePicker() {
       // Date range trigger handler

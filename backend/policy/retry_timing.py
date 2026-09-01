@@ -31,7 +31,7 @@ import statistics
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-from ev_gate import Bucket
+from policy.ev_gate import Bucket
 
 # Fallback windows (days after failure) when the customer has no retry
 # history yet. Keyed by reason_code because different failure types

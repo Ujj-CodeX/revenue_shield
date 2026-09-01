@@ -87,22 +87,20 @@ export default {
       required: true
     }
   },
-  data() {
+  emits: ['rerun'],
+    data() {
     return {
       isRunning: false,
       currentRunId: this.backtest.runId
     };
   },
   methods: {
-    rerunBacktest() {
+    async rerunBacktest() {
       this.isRunning = true;
-      setTimeout(() => {
-        const now = new Date();
-        const timestamp = now.toISOString().slice(0, 10).replace(/-/g, '') + '_' + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
-        this.currentRunId = `BT_${timestamp}`;
-        this.isRunning = false;
-      }, 750);
+      this.$emit('rerun');
+      this.isRunning = false;
     }
   }
+
 };
 </script>

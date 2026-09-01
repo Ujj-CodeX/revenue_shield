@@ -65,7 +65,7 @@ class ObservableEvent(models.Model):
     amount = models.FloatField()
     reason_code = models.CharField(max_length=32)
     raw_text = models.CharField(max_length=255, null=True, blank=True)  # only set when reason_code == UNKNOWN_DECLINE
-    bank = models.CharField(max_length=32)
+    bank = models.CharField(max_length=32,default="UNKNOWN")
 
     class Meta:
         indexes = [
