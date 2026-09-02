@@ -64,9 +64,17 @@ def classify_event(event: dict, confidence_threshold: float = CONFIDENCE_THRESHO
         source = "llm_fallback"
     else:
         bucket = bucket_for_reason_code(code)
-        confidence = RULE_CONFIDENCE
-        reasoning = reasoning_for_reason_code(code)
-        source = "rule"
+        if code == ReasonCode.UNKNOWN_DECLINE:
+            # Structured code, but the gateway itself couldn't classify it —
+            # this IS the free-text/unstructured minority case from 6.2.
+            # Classify off the raw gateway text, not the placeholder code.
+            llm_result = classify_via_llm(event.get("raw_text") or raw_code)
+            bucket, confidence, reasoning = llm_result.bucket, llm_result.confidence, llm_result.reasoning
+            source = "llm_fallback"
+        else:
+            confidence = RULE_CONFIDENCE
+            reasoning = reasoning_for_reason_code(code)
+            source = "rule"
 
     flagged = confidence < confidence_threshold
     if flagged:
