@@ -64,6 +64,8 @@ class SyntheticDataset:
                     continue  # e.g. day 30/31 in Feb, just skip that cycle
                 outcome = self.gateway.attempt_payment(customer, due_date)
                 if not outcome.success:
+                    outcome.bank = outcome.bank or customer.bank
+                    outcome.merchant_id = outcome.merchant_id or customer.merchant_id
                     self.events.append(outcome)
 
     def observable_events_as_dicts(self) -> list[dict]:
@@ -82,6 +84,7 @@ class SyntheticDataset:
                 "reason_code": e.reason_code.value,
                 "raw_text": e.raw_text,
                 "bank": e.bank,
+                "merchant_id": e.merchant_id,
             }
             for e in self.events
         ]
@@ -116,3 +119,5 @@ if __name__ == "__main__":
     ds2 = SyntheticDataset(seed=42, n_customers=200, months=4)
     same = ds.observable_events_as_dicts() == ds2.observable_events_as_dicts()
     print(f"\nReproducibility check (same seed -> same events): {same}")
+
+    

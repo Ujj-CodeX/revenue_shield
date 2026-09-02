@@ -39,6 +39,7 @@ class CustomerGroundTruth:
 
     # --- Transient/systemic noise ---
     base_network_error_rate: float = 0.03  # small chance of a one-off blip
+    merchant_id: str = "MERCH_001"
 
     def balance_on(self, on_date: date) -> float:
         """
@@ -71,6 +72,17 @@ class CustomerGroundTruth:
 
 
 BANKS = ["HDFC", "ICICI", "SBI", "Axis", "Kotak", "PNB", "Yes Bank"]
+
+# Synthetic merchants — customers are round-robin assigned across these,
+# so "select a merchant" filters the same underlying dataset instead of
+# needing a separate generation run per merchant.
+MERCHANTS = [
+    {"id": "MERCH_001", "name": "StreamFlix India", "industry": "Streaming", "plan": "Premium"},
+    {"id": "MERCH_002", "name": "FitPro Subscriptions", "industry": "Fitness", "plan": "Growth"},
+    {"id": "MERCH_003", "name": "CloudNote SaaS", "industry": "SaaS", "plan": "Enterprise"},
+    {"id": "MERCH_004", "name": "DailyNews+", "industry": "Media", "plan": "Starter"},
+    {"id": "MERCH_005", "name": "EduLearn Academy", "industry": "EdTech", "plan": "Growth"},
+]
 
 
 def _pick_hard_decline_flags(rng: random.Random, signup: date, horizon_days: int) -> dict:
@@ -117,6 +129,7 @@ def generate_customers(n: int, seed: int, start_date: date, horizon_days: int) -
             CustomerGroundTruth(
                 customer_id=f"cust_{i:05d}",
                 bank=rng.choice(BANKS),
+                merchant_id=MERCHANTS[i % len(MERCHANTS)]["id"],
                 subscription_amount=subscription_amount,
                 due_day=due_day,
                 starting_balance=starting_balance,

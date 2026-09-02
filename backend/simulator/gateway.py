@@ -30,6 +30,7 @@ class PaymentOutcome:
     success: bool
     reason_code: ReasonCode | None
     bank: str = ""                          # NEW — observable, same as a real webhook's bank/gateway field
+    merchant_id: str = ""                   # NEW — which synthetic merchant this customer belongs to
     raw_text: str | None = None
     true_reason_code: ReasonCode | None = None
 

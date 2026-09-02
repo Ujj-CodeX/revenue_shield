@@ -39,7 +39,7 @@ def test_observable_events_never_leak_ground_truth_fields():
     }
     for event in ds.observable_events_as_dicts():
         assert forbidden_keys.isdisjoint(event.keys())
-        assert set(event.keys()) == {"customer_id", "timestamp", "amount", "reason_code", "raw_text", "bank"}
+        assert set(event.keys()) == {"customer_id", "timestamp", "amount", "reason_code", "raw_text", "bank", "merchant_id"}
 
 
 def test_expired_card_always_hard_declines_even_with_healthy_balance():

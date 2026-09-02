@@ -45,9 +45,11 @@ def _pct(n: float) -> str:
     return f"{n:.1f}%"
 
 
-def build_dashboard_payload(seed: int = 42, n_customers: int = 200, months: int = 4) -> dict:
+def build_dashboard_payload(seed: int = 42, n_customers: int = 200, months: int = 4, merchant_id: str | None = None) -> dict:
     ds = SyntheticDataset(seed=seed, n_customers=n_customers, months=months)
     events = ds.observable_events_as_dicts()
+    if merchant_id:
+        events = [e for e in events if e.get("merchant_id") == merchant_id]
 
     classifications = classify_batch(events)
     systemic_flags = detect_systemic_days(events)
@@ -65,11 +67,14 @@ def build_dashboard_payload(seed: int = 42, n_customers: int = 200, months: int 
     revenue_at_risk = sum(d.amount for d in decisions)
     recoverable = sum(d.ev_decision.expected_value for d in retried)
 
+    from simulator.ground_truth import MERCHANTS
+    selected = next((m for m in MERCHANTS if m["id"] == merchant_id), None) if merchant_id else None
+
     merchant_context = {
-        "merchantName": "REVENUE SHIELD DEMO",
-        "merchantId": f"SEED_{seed}",
-        "industry": "Subscriptions",
-        "plan": "Premium",
+        "merchantName": selected["name"] if selected else "REVENUE SHIELD DEMO (All Merchants)",
+        "merchantId": selected["id"] if selected else f"SEED_{seed}",
+        "industry": selected["industry"] if selected else "Subscriptions",
+        "plan": selected["plan"] if selected else "Premium",
         "status": "ACTIVE",
         "onboardedDate": "-",
         "seed": seed,
@@ -148,7 +153,7 @@ def build_dashboard_payload(seed: int = 42, n_customers: int = 200, months: int 
         "retriesAvoidedPercentage": _pct(report.useless_retries_avoided_pct),
         "seed": seed,
         "runId": f"BT_run_{run.id}",
-        "baselineDescription": "Baseline: Naive retry everything on same data set",
+        "baselineDescription": "Baseline: Naive retry everything on same data set (platform-wide, all merchants)",
     }
 
     return {
