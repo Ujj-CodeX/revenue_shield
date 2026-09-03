@@ -121,15 +121,26 @@ def run_backtest(
     n_customers: int = 200,
     months: int = 4,
     retry_cost: float = DEFAULT_RETRY_COST,
+    merchant_id: str | None = None,
 ) -> BacktestReport:
     """
     Generates a fresh synthetic dataset for `seed` and runs both arms
     against it. Deterministic: the same seed always produces the same
     report (checked in tests) — this is what makes "Re-run Backtest"
     honest rather than decorative.
+
+    If `merchant_id` is given, both arms are scoped to only that
+    merchant's customers/events — required so KPI numbers computed
+    against a merchant-filtered event set (e.g. "recoverable revenue")
+    are compared against a recovered-₹ number from the SAME scope,
+    not the full 200-customer dataset.
     """
+   
+    
     ds = SyntheticDataset(seed=seed, n_customers=n_customers, months=months)
     events = ds.observable_events_as_dicts()
+    if merchant_id:
+        events = [e for e in events if e.get("merchant_id") == merchant_id]
     customers_by_id = {c.customer_id: c for c in ds.customers}
 
     classifications = classify_batch(events)

@@ -5,7 +5,7 @@
 
 import { MERCHANTS, generateDashboardPayload } from './simulator';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
 export async function fetchMerchants() {
   try {

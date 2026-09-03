@@ -1,59 +1,84 @@
 /**
- * Revenue Shield AI - API Client Layer
- * Handles communication with backend endpoints with resilient fallback
+ * Revenue Shield AI - Offline Fallback Simulator
+ * Used by services/api.js ONLY when the real backend is unreachable, so
+ * the demo UI never hard-crashes on a network blip. Mirrors the shape of
+ * the real /api/merchants/ and /api/dashboard/ responses, but with
+ * lightweight placeholder numbers -- not a substitute for the real
+ * backend-computed backtest.
  */
 
-import { MERCHANTS, generateDashboardPayload } from './simulator';
+export const MERCHANTS = [
+  { id: 'MERCH_001', name: 'StreamFlix India', industry: 'Streaming', plan: 'Premium' },
+  { id: 'MERCH_002', name: 'FitPro Subscriptions', industry: 'Fitness', plan: 'Growth' },
+  { id: 'MERCH_003', name: 'CloudNote SaaS', industry: 'SaaS', plan: 'Enterprise' },
+  { id: 'MERCH_004', name: 'DailyNews+', industry: 'Media', plan: 'Starter' },
+  { id: 'MERCH_005', name: 'EduLearn Academy', industry: 'EdTech', plan: 'Growth' },
+];
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
-
-export async function fetchMerchants() {
-  try {
-    const res = await fetch(`${API_BASE}/api/merchants/`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      return data;
-    }
-  } catch (err) {
-    console.warn('Backend merchants API unreachable, using simulated merchants list:', err.message);
-  }
-  return MERCHANTS;
+function seededRandom(seed) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
 }
 
-export async function fetchDashboard(merchantId = 'MERCH_001', seed = 42) {
-  try {
-    const res = await fetch(`${API_BASE}/api/dashboard/?merchant_id=${encodeURIComponent(merchantId)}&seed=${encodeURIComponent(seed)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (data && data.merchantContext) {
-      return data;
-    }
-  } catch (err) {
-    console.warn('Backend dashboard API unreachable, computing payload locally:', err.message);
-  }
-  return generateDashboardPayload(merchantId, seed);
-}
+export function generateDashboardPayload(merchantId = 'MERCH_001', seed = 42) {
+  const merchant = MERCHANTS.find((m) => m.id === merchantId) || MERCHANTS[0];
+  const rand = seededRandom(seed);
 
-export async function runBacktest(merchantId = 'MERCH_001', seed = null) {
-  const effectiveSeed = seed !== null ? seed : Math.floor(Math.random() * 10000);
-  try {
-    const res = await fetch(`${API_BASE}/api/backtest/run/?merchant_id=${encodeURIComponent(merchantId)}&seed=${encodeURIComponent(effectiveSeed)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!res.ok) {
-      // Try GET if POST is not permitted
-      const getRes = await fetch(`${API_BASE}/api/backtest/run/?merchant_id=${encodeURIComponent(merchantId)}&seed=${encodeURIComponent(effectiveSeed)}`);
-      if (!getRes.ok) throw new Error(`HTTP ${getRes.status}`);
-      const data = await getRes.json();
-      if (data && data.merchantContext) return data;
-    } else {
-      const data = await res.json();
-      if (data && data.merchantContext) return data;
-    }
-  } catch (err) {
-    console.warn('Backend backtest API unreachable, simulating backtest run:', err.message);
-  }
-  return generateDashboardPayload(merchantId, effectiveSeed);
+  const totalFailures = 80 + Math.floor(rand() * 60);
+  const revenueAtRisk = Math.round(totalFailures * (300 + rand() * 900));
+  const recoverable = Math.round(revenueAtRisk * (0.35 + rand() * 0.15));
+  const recovered = Math.round(recoverable * (0.85 + rand() * 0.2));
+
+  return {
+    merchantContext: {
+      merchantName: `${merchant.name} (offline preview)`,
+      merchantId: merchant.id,
+      industry: merchant.industry,
+      plan: merchant.plan,
+      status: 'ACTIVE',
+      onboardedDate: '-',
+      seed,
+      backtestRunId: `LOCAL_${seed}`,
+      dataAsOf: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      dateRange: '200 customers / 4 months (simulated, backend unreachable)',
+    },
+    kpiMetrics: {
+      revenueAtRisk: `₹${revenueAtRisk.toLocaleString('en-IN')}`,
+      revenueAtRiskSubtitle: `Across ${totalFailures} failed payments`,
+      recoverableRevenue: `₹${recoverable.toLocaleString('en-IN')}`,
+      recoverableRevenueSubtitle: 'Expected from EV-positive retries',
+      recoveryRate: `${((recovered / recoverable) * 100).toFixed(1)}%`,
+      recoveryRateSubtitle: '(Recovered / Recoverable)',
+      uselessRetriesAvoided: String(Math.round(totalFailures * 0.4)),
+      uselessRetriesAvoidedSubtitle: 'Vs naive retry everything',
+    },
+    failedPaymentsData: [],
+    bucketSummaryData: {
+      hardDeclines: { count: '-', percentage: '-' },
+      softDeclines: { count: '-', percentage: '-' },
+      uncertain: { count: '-', percentage: '-' },
+      scheduledRetries: '-',
+      resolvedRecovered: '-',
+      resolvedNotRecovered: '-',
+      skippedByEvGate: '-',
+    },
+    hardDeclineReportData: { topReasons: [] },
+    backtestData: {
+      policyRecoveredRevenue: `₹${recovered.toLocaleString('en-IN')}`,
+      policyRetries: '-',
+      naiveRetryRecoveredRevenue: '-',
+      naiveRetries: '-',
+      improvement: '-',
+      improvementPercentage: '-',
+      retriesAvoided: '-',
+      retriesAvoidedPercentage: '-',
+      seed,
+      runId: `LOCAL_${seed}`,
+      baselineDescription: 'Backend unreachable — showing local simulated placeholder, not a real backtest.',
+    },
+  };
 }

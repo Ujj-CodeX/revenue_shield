@@ -55,7 +55,7 @@ def build_dashboard_payload(seed: int = 42, n_customers: int = 200, months: int 
     systemic_flags = detect_systemic_days(events)
     decisions = decide_batch(events, classifications, systemic_flags=systemic_flags, retry_cost=DEFAULT_RETRY_COST)
 
-    report = run_backtest(seed=seed, n_customers=n_customers, months=months)
+    report = run_backtest(seed=seed, n_customers=n_customers, months=months, merchant_id=merchant_id)
     run = persist_backtest_run(report, n_customers=n_customers, months=months)
 
     total = len(decisions)
