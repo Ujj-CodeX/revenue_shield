@@ -88,17 +88,24 @@ export default {
     }
   },
   emits: ['rerun'],
-    data() {
+  data() {
     return {
       isRunning: false,
       currentRunId: this.backtest.runId
     };
   },
+  watch: {
+    'backtest.runId': {
+      handler(newId) {
+        if (newId) this.currentRunId = newId;
+      },
+      immediate: true
+    }
+  },
   methods: {
-    async rerunBacktest() {
-      this.isRunning = true;
-      this.$emit('rerun');
-      this.isRunning = false;
+    rerunBacktest() {
+      const randomSeed = Math.floor(Math.random() * 10000) + 1;
+      this.$emit('rerun', { seed: randomSeed });
     }
   }
 

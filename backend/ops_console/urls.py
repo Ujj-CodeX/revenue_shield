@@ -6,8 +6,5 @@ urlpatterns = [
     path("dashboard/", dashboard, name="dashboard"),
     path("backtest/run/", rerun_backtest, name="rerun_backtest"),
     path("merchants/", merchants, name="merchants"),
-    path(
-    "hard-declines/export",
-    export_hard_declines
-)
+    path("hard-declines/export", export_hard_declines),
 ]

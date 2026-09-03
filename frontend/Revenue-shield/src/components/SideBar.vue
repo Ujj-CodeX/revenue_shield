@@ -53,40 +53,6 @@
               <span>OVERVIEW</span>
             </div>
           </a>
-
-          <a href="#" class="nav-terminal-item" id="nav-action-center" @click.prevent="$emit('close')">
-            <div class="d-flex align-items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-              </svg>
-              <span>ACTION CENTER</span>
-            </div>
-            <span class="nav-badge" id="action-center-badge">8</span>
-          </a>
-
-          <a href="#" class="nav-terminal-item" id="nav-backtest" @click.prevent="$emit('close')">
-            <div class="d-flex align-items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
-                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-                <polyline points="16 7 22 7 22 13"></polyline>
-              </svg>
-              <span>BACKTEST</span>
-            </div>
-          </a>
-
-          <a href="#" class="nav-terminal-item" id="nav-audit-log" @click.prevent="$emit('close')">
-            <div class="d-flex align-items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
-                <line x1="8" y1="6" x2="21" y2="6"></line>
-                <line x1="8" y1="12" x2="21" y2="12"></line>
-                <line x1="8" y1="18" x2="21" y2="18"></line>
-                <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                <line x1="3" y1="18" x2="3.01" y2="18"></line>
-              </svg>
-              <span>AUDIT LOG</span>
-            </div>
-          </a>
         </nav>
       </div>
 
