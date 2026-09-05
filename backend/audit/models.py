@@ -1,22 +1,3 @@
-"""
-audit/models.py
-
-The immutable audit log — problem statement section 5: "Every decision
-(classification, gate outcome, retry attempt, result) is written to an
-immutable audit log — timestamped, reasoned, replayable."
-
-One row per decision, not per event: a single failure event can produce
-several rows (classification, EV gate, retry timing, bank-pattern
-adjustment) — each independently queryable by stage, so "show me every
-bank-pattern override this week" or "show me every EV-gate skip" is a
-simple filter, not a JSON-blob scan.
-
-IMMUTABLE BY CONSTRUCTION: `save()` refuses any call on a row that
-already has a primary key. Rows are created once, via the `logger.py`
-helpers, and never edited — if a decision needs correcting, a NEW row
-records the correction; nothing is overwritten. This is what makes
-"replayable" honest: the log is a ledger, not a mutable cache.
-"""
 
 from __future__ import annotations
 

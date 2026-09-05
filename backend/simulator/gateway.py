@@ -29,8 +29,8 @@ class PaymentOutcome:
     amount: float
     success: bool
     reason_code: ReasonCode | None
-    bank: str = ""                          # NEW — observable, same as a real webhook's bank/gateway field
-    merchant_id: str = ""                   # NEW — which synthetic merchant this customer belongs to
+    bank: str = ""                         
+    merchant_id: str = ""                  
     raw_text: str | None = None
     true_reason_code: ReasonCode | None = None
 
@@ -39,17 +39,14 @@ class BankDegradationWindow:
     bank: str
     start: date
     end: date
-    extra_timeout_rate: float  # added on top of base_network_error_rate
+    extra_timeout_rate: float  
 
     def is_active(self, on_date: date) -> bool:
         return self.start <= on_date <= self.end
 
 
 class MockGateway:
-    # A small set of realistic messy/free-text strings a bank sometimes
-    # returns instead of a clean code. Keyed by the TRUE underlying reason,
-    # so the LLM fallback has something plausible to reason about — and the
-    # backtest can later grade whether the fallback recovered the right bucket.
+   
     MESSY_TEXT_BY_TRUE_REASON = {
         ReasonCode.INSUFFICIENT_FUNDS: [
             "txn declined by issuer - retry later",
@@ -76,9 +73,7 @@ class MockGateway:
         ],
     }
 
-    # Fraction of declines whose clean reason code gets obscured into a
-    # messy free-text UNKNOWN_DECLINE event instead — this is what forces
-    # the classification layer to actually use its LLM fallback path.
+   
     UNCERTAIN_OBSCURE_RATE = 0.08
 
     def __init__(self, seed: int, degradation_windows: list[BankDegradationWindow] | None = None):
@@ -92,14 +87,7 @@ class MockGateway:
         return None
 
     def _decline(self, customer_id: str, on_date: date, amount: float, true_reason: ReasonCode) -> PaymentOutcome:
-        """
-        Emits the OBSERVABLE outcome for a decline. Most of the time this
-        just passes the true reason code straight through (matching the
-        documented Razorpay behaviour where structured codes ARE returned).
-        A small fraction get obscured into an UNKNOWN_DECLINE + free text —
-        modelling the minority of cases where the bank/network returns
-        something unstructured instead.
-        """
+       
         if self._rng.random() < self.UNCERTAIN_OBSCURE_RATE and true_reason in self.MESSY_TEXT_BY_TRUE_REASON:
             text = self._rng.choice(self.MESSY_TEXT_BY_TRUE_REASON[true_reason])
             return PaymentOutcome(
@@ -112,14 +100,7 @@ class MockGateway:
         )
 
     def attempt_payment(self, customer: CustomerGroundTruth, on_date: date) -> PaymentOutcome:
-        """
-        Resolves a single payment attempt against the customer's hidden
-        ground truth. Priority order matches how a real gateway would
-        actually fail a transaction: dead instrument first (no point
-        checking balance on an expired card), then systemic issues, then
-        balance, then a small residual chance of a transient blip even on
-        an otherwise healthy attempt.
-        """
+        
         amount = customer.subscription_amount
 
         # 1. Permanently dead instrument -> hard decline, balance irrelevant.

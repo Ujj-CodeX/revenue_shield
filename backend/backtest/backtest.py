@@ -1,40 +1,3 @@
-"""
-backtest.py
-
-The Backtest / Measured-Recovery Engine — problem statement section 7,
-called out there as "the single highest-leverage piece for standing out
-in judging." Turns "we predict revenue recovery" into "we can prove
-revenue recovery" by re-running two policies over the SAME synthetic
-failure population and comparing outcomes.
-
-POLICY ARM:
-    classify (classification.classifier) -> policy_engine.decide_event
-    (EV gate + reason/history timing + bank-pattern reschedule) -> only
-    events that come out EV-positive AND non-HARD get a simulated retry,
-    on the date policy_engine picked.
-
-NAIVE ARM:
-    Every single failure gets retried, blind to bucket/EV/bank-pattern,
-    a fixed NAIVE_RETRY_DELAY_DAYS after the original failure — this is
-    the "Payment Failed -> Retry -> Retry Again" behaviour described in
-    problem statement section 2 as the status quo this project replaces.
-
-FAIRNESS: both arms resolve their retries against a FRESH MockGateway,
-independently constructed with the same seed and the same scripted
-BankDegradationWindow(s) as the dataset that produced the failures in
-the first place. Neither arm shares gateway state with the other or with
-the original event-generation run — each gets its own clean stochastic
-stream so one arm's retries can't consume "luck" meant for the other.
-The one thing that legitimately differs between the arms is WHICH events
-get retried and WHEN — exactly the two decisions this project's policy
-layer claims to make better than a blind retry.
-
-Metrics produced (mapped to section 11's success metrics):
-    - rupees recovered, policy vs. naive
-    - useless retries (retries attempted that failed again), both arms
-    - useless retries avoided by policy vs. naive (decline-rate protection)
-    - reproducibility: same seed -> same numbers (checked in tests)
-"""
 
 from __future__ import annotations
 
@@ -88,13 +51,7 @@ def _run_arm(
     degradation_windows: list[BankDegradationWindow],
     retry_cost: float,
 ) -> ArmResult:
-    """
-    Simulates a list of (customer, retry_date) attempts against a FRESH
-    gateway instance, seeded identically to the dataset's own gateway.
-    Amount retried is always the customer's own subscription_amount,
-    read from the same ground truth the original failure used — never a
-    number the policy/naive layer invented.
-    """
+    
     gateway = MockGateway(seed=seed, degradation_windows=degradation_windows)
     successes = 0
     rupees_recovered = 0.0
@@ -123,18 +80,7 @@ def run_backtest(
     retry_cost: float = DEFAULT_RETRY_COST,
     merchant_id: str | None = None,
 ) -> BacktestReport:
-    """
-    Generates a fresh synthetic dataset for `seed` and runs both arms
-    against it. Deterministic: the same seed always produces the same
-    report (checked in tests) — this is what makes "Re-run Backtest"
-    honest rather than decorative.
-
-    If `merchant_id` is given, both arms are scoped to only that
-    merchant's customers/events — required so KPI numbers computed
-    against a merchant-filtered event set (e.g. "recoverable revenue")
-    are compared against a recovered-₹ number from the SAME scope,
-    not the full 200-customer dataset.
-    """
+    
    
     
     ds = SyntheticDataset(seed=seed, n_customers=n_customers, months=months)
@@ -196,12 +142,7 @@ def print_report(report: BacktestReport) -> None:
 
 
 def persist_backtest_run(report: "BacktestReport", n_customers: int = 200, months: int = 4):
-    """
-    Saves a BacktestReport to the DB (backtest.models.BacktestRun) and
-    writes the summary to the immutable audit log (audit.logger). Django
-    apps must be set up before this is called (management command / API
-    view context) — pure-Python callers should just use run_backtest().
-    """
+    
     from .models import BacktestRun
 
     run = BacktestRun.objects.create(

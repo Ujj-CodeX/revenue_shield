@@ -1,17 +1,4 @@
-"""
-reason_lookup.py
 
-The deterministic rule table: reason_code -> (bucket, reasoning template).
-Per the problem statement (6.2), this handles the large majority of
-events — structured codes the gateway already tells us — at zero cost
-and full explainability. No LLM call, no ambiguity.
-
-This is deliberately a thin wrapper around the HARD_CODES / SOFT_CODES /
-UNCERTAIN_CODES sets already defined in simulator/reason_codes.py, so the
-bucket definition lives in exactly one place and can't drift between the
-simulator (which decides what to emit) and the classifier (which decides
-what it means).
-"""
 
 from __future__ import annotations
 

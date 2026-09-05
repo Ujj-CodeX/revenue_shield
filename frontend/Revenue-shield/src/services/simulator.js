@@ -1,11 +1,4 @@
-/**
- * Revenue Shield AI - Offline Fallback Simulator
- * Used by services/api.js ONLY when the real backend is unreachable, so
- * the demo UI never hard-crashes on a network blip. Mirrors the shape of
- * the real /api/merchants/ and /api/dashboard/ responses, but with
- * lightweight placeholder numbers -- not a substitute for the real
- * backend-computed backtest.
- */
+
 
 export const MERCHANTS = [
   { id: 'MERCH_001', name: 'StreamFlix India', industry: 'Streaming', plan: 'Premium' },

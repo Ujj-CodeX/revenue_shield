@@ -43,7 +43,7 @@ TRANSIENT_REASON_CODES = {"BANK_TIMEOUT", "NETWORK_ERROR"}
 
 DEFAULT_Z_THRESHOLD = 2.5
 DEFAULT_BASELINE_LOOKBACK_DAYS = 14
-DEFAULT_MIN_BASELINE_POINTS = 5  # don't flag anything until we trust the baseline
+DEFAULT_MIN_BASELINE_POINTS = 5 
 
 
 @dataclass
@@ -58,12 +58,7 @@ class SystemicFlag:
 
 
 def _daily_transient_counts(events: list[dict]) -> dict[str, dict[date, int]]:
-    """
-    Groups observable events into {bank: {day: transient_failure_count}}.
-    Only BANK_TIMEOUT / NETWORK_ERROR count toward the signal — other
-    reason codes (CARD_EXPIRED, INSUFFICIENT_FUNDS, ...) are customer-side,
-    not bank-side, and would just add noise to this specific signal.
-    """
+   
     counts: dict[str, dict[date, int]] = defaultdict(lambda: defaultdict(int))
     for e in events:
         if e["reason_code"] not in TRANSIENT_REASON_CODES:
@@ -75,14 +70,7 @@ def _daily_transient_counts(events: list[dict]) -> dict[str, dict[date, int]]:
 
 
 def _first_observed_day_per_bank(events: list[dict]) -> dict[str, date]:
-    """
-    Earliest day each bank appears in the event stream AT ALL (any reason
-    code, not just transient ones). This marks when we actually started
-    observing that bank, so a day with zero transient failures BEFORE that
-    point isn't mistaken for a real quiet day — it's just data we don't
-    have yet. Using this instead of "count days present in the counts
-    dict" is what makes the min-baseline-points check honest.
-    """
+    
     first: dict[str, date] = {}
     for e in events:
         bank = e["bank"]
@@ -99,15 +87,7 @@ def _zscore_for_day(
     baseline_lookback_days: int,
     min_baseline_points: int,
 ) -> tuple[float | None, float, float, int]:
-    """
-    Computes the z-score of `target_day`'s count against the mean/stdev of
-    the preceding days for the SAME bank, restricted to days that were
-    actually within the observation window (on/after `first_observed_day`).
-    Days before observation started are excluded rather than padded with
-    0s, so an early spike right after data collection begins doesn't get
-    compared against a fake all-zero history.
-    Returns (z_score_or_None, baseline_mean, baseline_stdev, observed_count).
-    """
+    
     observed = daily_counts.get(target_day, 0)
 
     window_start = max(target_day - timedelta(days=baseline_lookback_days), first_observed_day)
@@ -139,14 +119,7 @@ def detect_systemic_days(
     baseline_lookback_days: int = DEFAULT_BASELINE_LOOKBACK_DAYS,
     min_baseline_points: int = DEFAULT_MIN_BASELINE_POINTS,
 ) -> list[SystemicFlag]:
-    """
-    Scans every (bank, day) pair that has at least one transient failure
-    and flags the ones whose count is a statistically significant spike
-    over that bank's own recent baseline.
-
-    `events` must be observable-event dicts with at least:
-        {"bank": str, "reason_code": str, "timestamp": str|date}
-    """
+    
     per_bank_counts = _daily_transient_counts(events)
     first_observed = _first_observed_day_per_bank(events)
     flags: list[SystemicFlag] = []

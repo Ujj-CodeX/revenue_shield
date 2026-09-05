@@ -17,24 +17,21 @@ from enum import Enum
 
 
 class ReasonCode(str, Enum):
-    # --- Hard declines: require customer/bank-side action, no retry ---
+    
     CARD_EXPIRED = "CARD_EXPIRED"
     MANDATE_REVOKED = "MANDATE_REVOKED"
     ACCOUNT_CLOSED = "ACCOUNT_CLOSED"
 
-    # --- Soft declines: temporary, retry-eligible ---
+   
     INSUFFICIENT_FUNDS = "INSUFFICIENT_FUNDS"
     BANK_TIMEOUT = "BANK_TIMEOUT"
     NETWORK_ERROR = "NETWORK_ERROR"
 
-    # --- Uncertain: unstructured / free-text, routed to LLM fallback ---
+    
     UNKNOWN_DECLINE = "UNKNOWN_DECLINE"
 
 
-# Ground-truth bucket each code belongs to. This is what the CLASSIFIER is
-# meant to learn/recover via the rule table — the generator uses it only to
-# decide which code to emit, never to leak the bucket label itself as a
-# shortcut field on the event.
+
 HARD_CODES = {ReasonCode.CARD_EXPIRED, ReasonCode.MANDATE_REVOKED, ReasonCode.ACCOUNT_CLOSED}
 SOFT_CODES = {ReasonCode.INSUFFICIENT_FUNDS, ReasonCode.BANK_TIMEOUT, ReasonCode.NETWORK_ERROR}
 UNCERTAIN_CODES = {ReasonCode.UNKNOWN_DECLINE}

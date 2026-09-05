@@ -1,7 +1,3 @@
-/**
- * Revenue Shield AI - API Client Layer
- * Handles communication with backend endpoints with resilient fallback
- */
 
 import { MERCHANTS, generateDashboardPayload } from './simulator';
 

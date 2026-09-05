@@ -1,17 +1,4 @@
-"""
-Persistence layer for the simulator app.
 
-Two tables are deliberately kept apart, matching the isolation rule from
-Stage 0:
-
-  - SyntheticCustomer -> hidden ground truth. Only backtest/audit code
-    should ever query this table directly.
-  - ObservableEvent    -> what classification/policy actually consume.
-    This is the equivalent of a real Razorpay failure webhook payload.
-
-A SimulationRun ties a seed + params to the records it produced, so a
-backtest can be re-run and compared against a previous run by seed.
-"""
 
 from django.db import models
 

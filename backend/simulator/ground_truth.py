@@ -22,34 +22,28 @@ class CustomerGroundTruth:
     customer_id: str
     bank: str
 
-    # --- Recurring payment being tracked ---
+   
     subscription_amount: float
-    due_day: int  # day-of-month the subscription attempts (1-28)
+    due_day: int  
 
-    # --- Balance simulation (soft-decline resolution) ---
+   
     starting_balance: float
-    salary_day: int  # day-of-month salary/credit lands (1-28)
+    salary_day: int  
     salary_amount: float
-    daily_burn: float  # average balance drawdown per day between credits
+    daily_burn: float 
 
-    # --- Hard-decline instrument state ---
-    card_valid_until: date | None  # None => not a card mandate (e.g. UPI)
-    mandate_revoked_on: date | None  # None => never revoked
-    account_closed_on: date | None  # None => never closed
+   
+    card_valid_until: date | None  
+    mandate_revoked_on: date | None  
+    account_closed_on: date | None  
 
     # --- Transient/systemic noise ---
-    base_network_error_rate: float = 0.03  # small chance of a one-off blip
+    base_network_error_rate: float = 0.03  
     merchant_id: str = "MERCH_001"
 
     def balance_on(self, on_date: date) -> float:
-        """
-        Reconstructs the account balance on a given date using a simple
-        sawtooth model: balance jumps up by `salary_amount` on each
-        `salary_day`, and decays by `daily_burn` every day in between.
-        This is intentionally simple — it's a stand-in for real bank-ledger
-        data the aggregator would never actually have access to.
-        """
-        # Walk backwards to the most recent salary credit on/before on_date.
+        
+      
         if on_date.day >= self.salary_day:
             last_credit = date(on_date.year, on_date.month, self.salary_day)
         else:
@@ -73,9 +67,7 @@ class CustomerGroundTruth:
 
 BANKS = ["HDFC", "ICICI", "SBI", "Axis", "Kotak", "PNB", "Yes Bank"]
 
-# Synthetic merchants — customers are round-robin assigned across these,
-# so "select a merchant" filters the same underlying dataset instead of
-# needing a separate generation run per merchant.
+
 MERCHANTS = [
     {"id": "MERCH_001", "name": "StreamFlix India", "industry": "Streaming", "plan": "Premium"},
     {"id": "MERCH_002", "name": "FitPro Subscriptions", "industry": "Fitness", "plan": "Growth"},
@@ -86,12 +78,7 @@ MERCHANTS = [
 
 
 def _pick_hard_decline_flags(rng: random.Random, signup: date, horizon_days: int) -> dict:
-    """
-    Decide, once at generation time, whether this customer's instrument
-    will fail permanently at some point in the simulation horizon.
-    Roughly: ~6% card-expiry, ~3% mandate-revoke, ~1.5% account-closure —
-    tuned to be rare, since these are the exception not the rule.
-    """
+    
     flags = {"card_valid_until": None, "mandate_revoked_on": None, "account_closed_on": None}
     roll = rng.random()
     if roll < 0.06:
@@ -107,11 +94,7 @@ def _pick_hard_decline_flags(rng: random.Random, signup: date, horizon_days: int
 
 
 def generate_customers(n: int, seed: int, start_date: date, horizon_days: int) -> list[CustomerGroundTruth]:
-    """
-    Generates `n` synthetic customers with a hidden financial ground truth.
-    Deterministic for a given seed — same seed always produces the same
-    population, which is what makes the backtest re-runnable and provable.
-    """
+    
     rng = random.Random(seed)
     customers = []
 

@@ -69,13 +69,7 @@ class SyntheticDataset:
                     self.events.append(outcome)
 
     def observable_events_as_dicts(self) -> list[dict]:
-        """
-        This is the ONLY view of the data the classification/policy layers
-        should ever consume — no ground-truth fields present. `raw_text` is
-        included because a real gateway would surface it too when the
-        reason code itself is UNKNOWN_DECLINE; `true_reason_code` is
-        deliberately withheld here even though it lives on the event.
-        """
+       
         return [
             {
                 "customer_id": e.customer_id,

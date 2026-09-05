@@ -50,10 +50,7 @@ from policy.ev_gate import evaluate as ev_evaluate
 from policy.bank_pattern_detection import SystemicFlag, is_bank_flagged_on
 from policy.retry_timing import RetryTimingDecision, suggest_retry_date
 
-# Safety cap: a bank flagged for an unusually long stretch shouldn't be
-# able to push a retry forward indefinitely. If this cap is hit, the
-# retry is scheduled anyway on the capped date, with the cap noted in the
-# audit trail for a human to look at.
+
 MAX_BANK_PUSH_DAYS = 14
 
 
@@ -85,13 +82,7 @@ def decide_event(
     customer_retry_success_history_days: list[int] | None = None,
     retry_cost: float = DEFAULT_RETRY_COST,
 ) -> PolicyDecision:
-    """
-    Runs the full Stage-3 policy pipeline for one classified event.
-
-    Returns a PolicyDecision whose `final_retry_date` is None whenever no
-    retry should happen at all (HARD bucket, or EV <= 0) — callers should
-    treat None as "do not schedule anything", not as "today".
-    """
+    
     bucket = Bucket(classification.bucket)
     failure_date = _as_date(classification.timestamp)
     audit: list[str] = []
@@ -173,16 +164,7 @@ def decide_batch(
     customer_retry_success_history_days: dict[str, list[int]] | None = None,
     retry_cost: float = DEFAULT_RETRY_COST,
 ) -> list[PolicyDecision]:
-    """
-    `events[i]` and `classifications[i]` must correspond to the same
-    underlying event, in the same order — `events` is only consulted here
-    for the `bank` field, which classifier.py deliberately drops.
-
-    `customer_retry_success_history_days` is an optional
-    {customer_id: [offset_days, ...]} map; omit it (or leave a
-    customer_id out) to fall back to retry_timing's reason/bucket
-    defaults for that customer.
-    """
+    
     if len(events) != len(classifications):
         raise ValueError("events and classifications must be the same length")
 
@@ -202,7 +184,7 @@ def decide_batch(
 
 
 def summarize(decisions: list[PolicyDecision]) -> dict:
-    """Quick aggregate view for sanity-checking a batch."""
+    
     return {
         "total": len(decisions),
         "retried": sum(1 for d in decisions if d.final_retry_date is not None),
@@ -219,8 +201,7 @@ if __name__ == "__main__":
 
     from policy.bank_pattern_detection import SystemicFlag as _SystemicFlag
 
-    # Fake Stage-1 outputs (mirrors classification.classifier.ClassificationResult
-    # closely enough for this standalone demo — real callers pass the real object).
+    
     @dataclass
     class _FakeClassification:
         customer_id: str
@@ -243,7 +224,7 @@ if __name__ == "__main__":
         {"bank": "ICICI"},
     ]
 
-    # ICICI is flagged as systemically degraded on the customer's suggested retry day.
+    
     demo_flags = [
         _SystemicFlag(
             bank="ICICI",
